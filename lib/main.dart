@@ -1,26 +1,20 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'First Homework',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'First Homework'),
     );
   }
 }
@@ -28,84 +22,150 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
+  final String langTextBegin = "Language is ";
+
+  final List<String> songText = [
+    'Дым сигарет с ментолом,\nПьяный угар качает.\nВ глаза ты смотришь другому,\nКоторый тебя ласкает.',
+    'А я нашёл другую,\nХоть не люблю, но целую.\nА когда я её обнимаю,\nВсё равно о тебе вспоминаю.',
+    'Губы твои, как маки,\nПлатье по моде носишь,\nСебя ты ему раздаришь,\nМеня же знать не хочешь.',
+    "Дым сигарет с ментолом,\nПьяный угар качает.\nВ глаза ты смотришь другому,\nКоторый тебя ласкает.",
+    'А я нашёл другую,\nХоть не люблю, но целую.\nА когда я её обнимаю,\nВсё равно о тебе вспоминаю.' +
+        'Завтра я буду дома,\nЗавтра я буду пьяный,\nНо никогда не забуду,\nКак к щеке прикоснулся губами.\n' +
+        'Лучше меня прости,\nБрось и вернись ко мне.\nПрости за то, что ушёл с другой,\nПрости за то, что ушла и ты.',
+  ];
+
+  final AssetsAudioPlayer _assetsAudioPlayer = AssetsAudioPlayer();
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _currentTextPart = -1;
+  bool _isAudioOpened = false;
+  bool _isAudioPlaying = false;
 
-  void _incrementCounter() {
+  void _playPause() {
+    _openAudio();
+    widget._assetsAudioPlayer.playOrPause();
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _isAudioPlaying = !_isAudioPlaying;
     });
+  }
+
+  void _openAudio() {
+    if (!_isAudioOpened) {
+      widget._assetsAudioPlayer.open("audios/nensi_dim_sigaret.mp3");
+
+      setState(() {
+        _isAudioOpened = true;
+      });
+    }
+  }
+
+  Widget _buildLangText() {
+    String langCode = ui.window.locale.languageCode;
+    String langText = '';
+
+    switch (langCode) {
+      case 'uk':
+        langText = 'Ukrainian';
+        break;
+      case 'bg':
+        langText = 'Bulgarian';
+        break;
+      case 'en':
+        langText = 'English';
+        break;
+    }
+    return new Text(widget.langTextBegin + langText);
+  }
+
+  Widget _buildLangImage() {
+    String langText = ui.window.locale.languageCode;
+    String assetName = 'images/';
+
+    switch (langText) {
+      case 'uk':
+        assetName += 'flag_ua.jpg';
+        break;
+      case 'bg':
+        assetName += 'flag_bg.jpg';
+        break;
+      case 'en':
+        assetName += 'flag_uk.jpg';
+        break;
+    }
+
+    return new Image.asset(assetName);
+  }
+
+  void onClickText() {
+    setState(() {
+      _currentTextPart++;
+      if (_currentTextPart >= widget.songText.length) {
+        _currentTextPart = 0;
+      }
+    });
+
+    String toastText = widget.songText[_currentTextPart];
+
+    Fluttertoast.cancel();
+    Fluttertoast.showToast(
+        msg: toastText,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIos: 2,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 16);
+  }
+
+  Widget _buildTextButton() {
+    return new Container(
+      margin: EdgeInsets.only(top: 5),
+      child: new FlatButton(
+        child: new Text('Text', style: new TextStyle(fontSize: 18)),
+        onPressed: onClickText,
+        color: Colors.black12,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
+      appBar: new AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+      body: new Container(
+          margin: const EdgeInsets.all(10),
+          child: new Center(
+            child: new Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                _buildLangText(),
+                _buildLangImage(),
+                _buildTextButton(),
+                new Text(
+                  '${_currentTextPart + 1}',
+                  style: Theme.of(context).textTheme.display1,
+                ),
+              ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+          )),
+        floatingActionButton: new FloatingActionButton(
+          onPressed: _playPause,
+          child: new Icon(_isAudioPlaying ? Icons.pause : Icons.play_arrow ),
+        )
     );
+  }
+
+  @override
+  void dispose() {
+    widget._assetsAudioPlayer.stop();
+    super.dispose();
   }
 }
